@@ -4,7 +4,9 @@ The goal is to make it easier to interact with Kudu. For instance, if I wanted t
 
 
 [11:51 AM] Adar Dembo: kudu <--> intermediary[a][b] <--> phone
+
 [11:52 AM] Adar Dembo: the intermediary and the phone would speak HTTP or whatever
+
 [11:52 AM] Adar Dembo: the intermediary and kudu would speak the Kudu client protocol
 
 
@@ -59,11 +61,18 @@ The goal is to make it easier to interact with Kudu. For instance, if I wanted t
    * Stateless or stateful ?
       * Probably stateless?
 
-
+* Update (7/8/2016):
+	* Currently supporting create tables, scans, and inserts
+	* TODOs: update the JSON support to be ProtoBuf by default and internal conversions to JSON and XML [b]
+		* HBase's REST API is centered around ProtoBuf
 
 
 [a]see http://blog.cloudera.com/blog/2013/03/how-to-use-the-apache-hbase-rest-interface-part-1/
+
 [b]https://github.com/apache/hbase/blob/master/hbase-rest/src/main/java/org/apache/hadoop/hbase/rest/RESTServer.java
+
 [c]https://jersey.java.net/
+
 [d]This is the framework used by HBase
+
 [e]This was how I originally formulated the problem, to be easy for applications to push data to Kudu. There is need beyond this to make the client easier to work with.

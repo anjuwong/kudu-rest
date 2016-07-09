@@ -1,5 +1,7 @@
 package rest;
 
+import com.stumbleupon.async.Callback;
+import com.stumbleupon.async.Deferred;
 import model.ColumnSchemaModel;
 import org.kududb.client.*;
 import org.json.*;
@@ -19,22 +21,50 @@ public class InsertDataResource {
     @PUT
     @Consumes("application/json")
     public int InsertDataResource(String s) throws Exception {
-        KuduClient client = RESTServlet.getInstance().getClient();
-        KuduSession session = client.newSession();
+        AsyncKuduClient client = RESTServlet.getInstance().getClient();
+        final AsyncKuduSession session = client.newSession();
 
         JSONObject obj = new JSONObject(s);
         String tableName = obj.getString("table");
-        KuduTable table = client.openTable(tableName);
 
-        JSONArray jsonArray = obj.getJSONArray("update");
+        Deferred<KuduTable> table = client.openTable(tableName);
+        // set the insert as a callback to the deferred openTable
+        // callBack: call-->deferred insert with callback
+        //          success: insert callBack: call--> {
+        //              success:
+        //              fail:
+        //          }
+        //          fail:
+        final JSONArray jsonArray = obj.getJSONArray("update");
+        // TODO: figure out how to pass this jsonArray to the callback
+        table.addCallback(new Callback<Object, KuduTable>() {
+            // When we know that the table exists, call the callback to insert
+            @Override
+            public Object call(KuduTable table) throws Exception {
+                Insert insert = table.newInsert();
+                PartialRow row = insert.getRow();
+                for (int i=0; i < jsonArray.length(); ++i) {
+                    JSONObject columnObj = jsonArray.getJSONObject(i);
+                    InsertDataResource.parseRowFromJson(columnObj, row);
+                }
+                Deferred<OperationResponse> insertHook = session.apply(insert);
+                insertHook.addCallback(new Callback<Object, OperationResponse>() {
+                    // After we insert, just return
+                    @Override
+                    public Object call(OperationResponse resp) throws Exception {
+                        if (resp.hasRowError()) {
+                            // if there was an error, try again?
+                            // potential defaults: try 3 times
+                            // have a queue of callbacks and on failure, add another one to the queue
+                        }
+                        else {}
+                        return null;
+                    }
+                });
+                return null;
+            }
+        });
 
-        Insert insert = table.newInsert();
-        PartialRow row = insert.getRow();
-        for (int i=0; i < jsonArray.length(); ++i) {
-            JSONObject columnObj = jsonArray.getJSONObject(i);
-            InsertDataResource.parseRowFromJson(columnObj, row);
-        }
-        session.apply(insert);
 
         return 0;
     }

@@ -24,7 +24,7 @@ public class RESTServer {
     private KuduTable idTable;
 
     public static void main(String[] args) throws Exception {
-        KuduClient client = new KuduClient.KuduClientBuilder("172.26.10.68").build();
+        AsyncKuduClient client = new AsyncKuduClient.AsyncKuduClientBuilder("172.26.10.68").build();
         ResourceConfig config = new ResourceConfig();
         config.packages("rest");
 

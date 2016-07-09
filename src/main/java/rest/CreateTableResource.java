@@ -1,5 +1,7 @@
 package rest;
 
+import com.stumbleupon.async.Callback;
+import com.stumbleupon.async.Deferred;
 import model.ColumnSchemaModel;
 import org.kududb.ColumnSchema;
 import org.kududb.Common;
@@ -7,6 +9,7 @@ import org.kududb.Schema;
 import org.kududb.Type;
 import org.kududb.client.*;
 import org.json.*;
+import org.kududb.master.Master;
 import rest.RESTServlet;
 
 import javax.ws.rs.Consumes;
@@ -27,16 +30,24 @@ public class CreateTableResource {
     @Consumes("application/json")
 //    public int insert(ColumnSchemaModel model) throws Exception {
     public int createTable(String s) throws Exception {
-        KuduClient client = RESTServlet.getInstance().getClient();
+        AsyncKuduClient client = RESTServlet.getInstance().getClient();
         JSONObject obj = new JSONObject(s);
         System.out.println(s);
-        Schema schema = CreateTableResource.getSchemaFromJson(obj);
 
-        client.createTable(obj.getString("TableName"),
+        Deferred<KuduTable> tableHook = client.createTable(obj.getString("TableName"),
                 CreateTableResource.getSchemaFromJson(obj),
                 new CreateTableOptions().setRangePartitionColumns(
                         CreateTableResource.getRangeKeysFromJson(obj)
                 ));
+        // This should be a callback to either sending an "ACK" or to
+        // If there is an error:
+        //      Send a response indicating it failed? Would that make these calls all GET requests? Maybe.
+        tableHook.addCallback(new Callback<Object, KuduTable>() {
+            @Override
+            public Object call(KuduTable table) throws Exception {
+                return null;
+            }
+        });
         return 0;
     }
 
@@ -51,7 +62,7 @@ public class CreateTableResource {
     }
 
     public static Schema getSchemaFromJson(JSONObject obj) throws Exception {
-        String tableName = obj.getString("TableName");
+//        String tableName = obj.getString("TableName");
         JSONArray columnArray = obj.getJSONArray("Columns");
         List<ColumnSchema> columns = new ArrayList();
         for (int i = 0; i < columnArray.length(); i++) {

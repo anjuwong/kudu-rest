@@ -1,6 +1,7 @@
 package rest;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.kududb.client.AsyncKuduClient;
 import org.kududb.client.KuduClient;
 
 import java.io.IOException;
@@ -10,16 +11,17 @@ import java.io.IOException;
  */
 public class RESTServlet {
 
-    private final KuduClient kclient;
+//    private final KuduClient kclient;
+    private final AsyncKuduClient kclient;
     private final ResourceConfig conf;
     private static RESTServlet INSTANCE;
 
-    public KuduClient getClient() {
+    public AsyncKuduClient getClient() {
         return kclient;
         }
 
     public synchronized static RESTServlet getInstance(ResourceConfig conf,
-                                                           KuduClient client) throws IOException {
+                                                           AsyncKuduClient client) throws IOException {
         if (INSTANCE == null) {
             INSTANCE = new RESTServlet(conf, client);
             }
@@ -32,7 +34,7 @@ public class RESTServlet {
         }
 
     RESTServlet(final ResourceConfig conf,
-                    final KuduClient client) throws IOException {
+                    final AsyncKuduClient client) throws IOException {
         this.kclient = client;
         this.conf = conf;
 
